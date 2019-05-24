@@ -62,7 +62,7 @@ RUN cd /usr/local/src &&\
     make install &&\
     make clean
 RUN ln -s /opt/php/bin/php /usr/local/bin/php
-RUN cd /usr/local/src &&\
+RUN cd /usr/local/src/php &&\
     ./configure \
         --prefix=/opt/php \
         --with-bz2 \
