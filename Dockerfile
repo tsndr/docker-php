@@ -118,7 +118,7 @@ RUN cd /usr/local/src/php &&\
     cp /usr/local/src/php/php.ini-production /opt/php/lib/php.ini &&\
     sed -i 's/; Local Variables:/; Local Variables:\nmemory_limit=256M\nupload_max_filesize=100M\npost_max_filesize=110M\n/' /opt/php/lib/php.ini &&\
     cp /opt/php/etc/php-fpm.conf.default /opt/php/etc/php-fpm.conf &&\
-    echo "[www]\nuser = www-data\ngroup = www-data\nlisten = /var/run/php-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\npm = ondemand\npm.maxchildren = 50\npm.process_idle_timeout = 10s\npm.max_requests = 500" > /opt/php/etc/php-fpm.d/www.conf
+    echo "[www]\nuser = www-data\ngroup = www-data\nlisten = /var/run/php-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\npm = ondemand\npm.max_children = 50\npm.process_idle_timeout = 10s\npm.max_requests = 500" > /opt/php/etc/php-fpm.d/www.conf
 
 # Installing nginx
 RUN apt-get install -y nginx &&\
