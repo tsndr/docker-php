@@ -1,9 +1,15 @@
 FROM debian:stretch-slim
+
+# Fixing apt
 RUN echo "Acquire::http::Pipeline-Depth 0; \
 Acquire::http::No-Cache true; \
 Acquire::BrokenProxy    true;" > /etc/apt/apt.conf.d/99fixbadproxy
-RUN apt-get update
-RUN apt-get install -y build-essential git autoconf wget curl libxml2-dev libssl-dev pkg-config libbz2-dev libcurl4-openssl-dev libenchant-dev libjpeg-dev libpng-dev libfreetype6-dev libmcrypt-dev libpspell-dev libreadline-dev libxslt1-dev libzip-dev libc-client-dev libkrb5-dev m4 -y
+
+# Installing php dependencies
+RUN apt-get update &&\
+    apt-get install -y build-essential git autoconf wget curl libxml2-dev libssl-dev pkg-config libbz2-dev libcurl4-openssl-dev libenchant-dev libjpeg-dev libpng-dev libfreetype6-dev libmcrypt-dev libpspell-dev libreadline-dev libxslt1-dev libzip-dev libc-client-dev libkrb5-dev m4
+
+# Building bison
 RUN cd /usr/local/src/ &&\
     wget http://ftp.gnu.org/gnu/bison/bison-2.7.tar.gz &&\
     tar xfz bison-2.7.tar.gz &&\
@@ -17,6 +23,8 @@ RUN cd /usr/local/src/ &&\
     make clean
 RUN ln -s /usr/local/bison/bin/bison /usr/bin/bison
 RUN ln -s /usr/local/bison/bin/yacc /usr/bin/yacc
+
+# Building php cli
 RUN cd /usr/local/src &&\
     git clone http://git.php.net/repository/php-src.git php &&\
     cd php &&\
@@ -60,8 +68,10 @@ RUN cd /usr/local/src &&\
         --with-kerberos &&\
     make &&\
     make install &&\
-    make clean
-RUN ln -s /opt/php/bin/php /usr/local/bin/php
+    make clean &&\
+    ln -s /opt/php/bin/php /usr/local/bin/php
+
+# Building php fpm
 RUN cd /usr/local/src/php &&\
     ./configure \
         --prefix=/opt/php \
@@ -103,12 +113,19 @@ RUN cd /usr/local/src/php &&\
         --without-pear &&\
     make &&\
     make install &&\
-    make clean
-RUN ln -s /opt/php/sbin/php-fpm /usr/local/sbin/php-fpm
-RUN cp /usr/local/src/php/php.ini-production /opt/php/lib/php.ini
-RUN sed -i 's/; Local Variables:/; Local Variables:\nmemory_limit=256M\nupload_max_filesize=100M\npost_max_filesize=110M\n/' /opt/php/lib/php.ini
-RUN cp /opt/php/etc/php-fpm.conf.default /opt/php/etc/php-fpm.conf
-RUN cp /opt/php/etc/php-fpm.d/www.conf.default /opt/php/etc/php-fpm.d/www.conf
+    make clean &&\
+    ln -s /opt/php/sbin/php-fpm /usr/local/sbin/php-fpm &&\
+    cp /usr/local/src/php/php.ini-production /opt/php/lib/php.ini &&\
+    sed -i 's/; Local Variables:/; Local Variables:\nmemory_limit=256M\nupload_max_filesize=100M\npost_max_filesize=110M\n/' /opt/php/lib/php.ini &&\
+    cp /opt/php/etc/php-fpm.conf.default /opt/php/etc/php-fpm.conf &&\
+    cp /opt/php/etc/php-fpm.d/www.conf.default /opt/php/etc/php-fpm.d/www.conf
+
+# Installing mysql server
+RUN export DEBIAN_FRONTEND=noninteractive &&\
+    apt-get update &&\
+    apt-get install -y mysql-server &&\
+    /etc/init.d/mysql start
+
 # TODOs
 # - Create FPM pool config
 # - Install MySQL
