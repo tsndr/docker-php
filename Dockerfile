@@ -62,5 +62,13 @@ RUN cd /usr/local/src &&\
     make install &&\
     make clean
 RUN ln -s /opt/php/bin/php /usr/local/bin/php
+
+# TODOs
+# - Compile FPM
+# - Create FPM pool config
+# - Install MySQL
+# - Install NGINX
+# - Create NGINX config
+
 # CMD ["php", "-a"]
 CMD bash
