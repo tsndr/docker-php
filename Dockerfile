@@ -107,7 +107,8 @@ RUN cd /usr/local/src/php &&\
 RUN ln -s /opt/php/sbin/php-fpm /usr/local/sbin/php-fpm
 RUN cp /usr/local/src/php/php.ini-production /opt/php/lib/php.ini
 RUN sed -i 's/; Local Variables:/; Local Variables:\nmemory_limit=256M\nupload_max_filesize=100M\npost_max_filesize=110M\n/' /opt/php/lib/php.ini
-
+RUN cp /opt/php/etc/php-fpm.conf.default /opt/php/etc/php-fpm.conf
+RUN cp /opt/php/etc/php-fpm.d/www.conf.default /opt/php/etc/php-fpm.d/www.conf
 # TODOs
 # - Create FPM pool config
 # - Install MySQL
@@ -115,4 +116,5 @@ RUN sed -i 's/; Local Variables:/; Local Variables:\nmemory_limit=256M\nupload_m
 # - Create NGINX config
 
 # CMD ["php", "-a"]
-CMD ["php", "--version"]
+#CMD ["php", "--version"]
+CMD ["php-fpm", "--nodaemonize", "--fpm-config", "/opt/php/etc/php-fpm.conf", "--allow-to-run-as-root"]
