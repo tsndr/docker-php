@@ -126,6 +126,12 @@ RUN export DEBIAN_FRONTEND=noninteractive &&\
     apt-get install -y mysql-server &&\
     /etc/init.d/mysql start
 
+# Installing nginx
+RUN apt-get update &&\
+    apt-get install -y nginx &&\
+    /etc/init.d/nginx start
+
+
 # TODOs
 # - Create FPM pool config
 # - Install MySQL
