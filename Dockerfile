@@ -62,13 +62,56 @@ RUN cd /usr/local/src &&\
     make install &&\
     make clean
 RUN ln -s /opt/php/bin/php /usr/local/bin/php
+RUN ./configure \
+        --prefix=/opt/php \
+        --with-bz2 \
+        --with-zlib \
+        --enable-zip \
+        --with-openssl \
+        --with-curl \
+        --enable-ftp \
+        --with-pdo-mysql \
+        --with-mysql-sock=/var/run/mysqld/mysqld.sock \
+        --with-mysqli \
+        --enable-sockets \
+        --enable-pcntl \
+        --with-pspell \
+        --with-enchant \
+        --with-gettext \
+        --with-gd \
+        --enable-exif \
+        --with-jpeg-dir \
+        --with-png-dir \
+        --with-freetype-dir \
+        --with-xsl \
+        --enable-bcmath \
+        --enable-mbstring \
+        --enable-calendar \
+        --enable-sysvmsg \
+        --enable-sysvsem \
+        --enable-sysvshm \
+        --disable-cli \
+        --enable-fpm \
+        --with-fpm-user=www-data \
+        --with-fpm-group=www-data \
+        --enable-intl \
+        --enable-soap \
+        --with-imap \
+        --with-imap-ssl \
+        --with-kerberos \
+        --without-pear &&\
+    make &&\
+    make install &&\
+    make clean
+RUN ln -s /opt/php/sbin/php-fpm /usr/local/sbin/php-fpm
+RUN cp /usr/local/src/php/php.ini-production /opt/php/lib/php.ini
+RUN sed -i 's/; Local Variables:/; Local Variables:\nmemory_limit=256M\nupload_max_filesize=100M\npost_max_filesize=110M\n/' /opt/php/lib/php.ini
 
 # TODOs
-# - Compile FPM
 # - Create FPM pool config
 # - Install MySQL
 # - Install NGINX
 # - Create NGINX config
 
 # CMD ["php", "-a"]
-CMD bash
+CMD ["php", "--version"]
