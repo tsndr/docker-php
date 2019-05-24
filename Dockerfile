@@ -118,26 +118,19 @@ RUN cd /usr/local/src/php &&\
     cp /usr/local/src/php/php.ini-production /opt/php/lib/php.ini &&\
     sed -i 's/; Local Variables:/; Local Variables:\nmemory_limit=256M\nupload_max_filesize=100M\npost_max_filesize=110M\n/' /opt/php/lib/php.ini &&\
     cp /opt/php/etc/php-fpm.conf.default /opt/php/etc/php-fpm.conf &&\
-    cp /opt/php/etc/php-fpm.d/www.conf.default /opt/php/etc/php-fpm.d/www.conf
+    echo "[www]\nuser = www-data\ngroup = www-data\nlisten = /var/run/php-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\npm = ondemand\npm.maxchildren = 50\npm.process_idle_timeout = 10s\npm.max_requests = 500" > /opt/php/etc/php-fpm.d/www.conf
+
+# Installing nginx
+RUN apt-get install -y nginx &&\
+    echo "server {\n\tlisten 80;\n\tlisten [::]:80;\n\tserver_name _;\n\taccess_log off;\n\terror_log off;\n\troot /var/www;\n\tindex index.php index.html;\n\tclient_max_body_size 30M;\n\tlocation ~* \.php\$ {\n\t\ttry_files\t\t\$uri /index.php;\n\t\tfastcgi_index\tindex.php;\n\t\tfastcgi_pass\tunix:/var/run/php-fpm.sock;\n\t\tinclude\t\t\tfastcgi_params;\n\t\tfastcgi_param\tSCRIPT_FILENAME\t\t\$document_root\$fastcgi_script_name;\n\t\tfastcgi_param\tSCRIPT_NAME\t\t\t\$fastcgi_script_name;\n\t\tfastcgi_read_timeout 600;\n\t}\n\tlocation / {\n\t\ttry_files \$uri \$uri/ =404;\n\t\tallow all;\n\t}\n\tlocation ~ /.well-known {\n\t\tallow all;\n\t}\n\tlocation ~ /\.ht {\n\t\tdeny all;\n\t\treturn 404;\n\t}\n}" > /etc/nginx/sites-available/default &&\
+    rm -rf /var/www/html
 
 # Installing mysql server
 RUN export DEBIAN_FRONTEND=noninteractive &&\
-    apt-get update &&\
-    apt-get install -y mysql-server &&\
-    /etc/init.d/mysql start
+    apt-get install -y mysql-server
 
-# Installing nginx
-RUN apt-get update &&\
-    apt-get install -y nginx &&\
-    /etc/init.d/nginx start
+RUN apt-get install -y supervisor &&\
+    echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=nginx -g \"daemon off;\"\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:mysql]\ncommand=mysqld\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:php-fpm]\ncommand=php-fpm --nodaemonize --fpm-config /opt/php/etc/php-fpm.conf\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true" > /etc/supervisor/supervisord.conf
 
-
-# TODOs
-# - Create FPM pool config
-# - Install MySQL
-# - Install NGINX
-# - Create NGINX config
-
-# CMD ["php", "-a"]
-#CMD ["php", "--version"]
-CMD ["php-fpm", "--nodaemonize", "--fpm-config", "/opt/php/etc/php-fpm.conf", "--allow-to-run-as-root"]
+EXPOSE 80
+CMD /usr/bin/supervisord
