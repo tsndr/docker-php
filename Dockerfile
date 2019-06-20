@@ -26,7 +26,7 @@ RUN ln -s /usr/local/bison/bin/yacc /usr/bin/yacc
 
 # Building php cli
 RUN cd /usr/local/src &&\
-    git clone http://git.php.net/repository/php-src.git php &&\
+    git clone https://github.com/php/php-src.git php &&\
     cd php &&\
     git checkout PHP-7.3 &&\
     ./buildconf \
