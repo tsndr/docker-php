@@ -5,6 +5,9 @@ RUN echo "Acquire::http::Pipeline-Depth 0; \
 Acquire::http::No-Cache true; \
 Acquire::BrokenProxy    true;" > /etc/apt/apt.conf.d/99fixbadproxy
 
+# Fixing timezone
+RUN ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+
 # Installing php dependencies
 RUN apt-get update &&\
     apt-get install -y build-essential git autoconf wget curl libxml2-dev libssl-dev pkg-config libbz2-dev libcurl4-openssl-dev libenchant-dev libjpeg-dev libpng-dev libfreetype6-dev libmcrypt-dev libpspell-dev libreadline-dev libxslt1-dev libzip-dev libc-client-dev libkrb5-dev m4
@@ -126,11 +129,15 @@ RUN apt-get install -y nginx &&\
 
 # Installing mysql server
 RUN export DEBIAN_FRONTEND=noninteractive &&\
-    apt-get install -y mysql-server
+    apt-get install -y mysql-server &&\
+    sed -i "s/\[client-server\]/\[mysqld\]\nuser=root\n\n[client-server]/g" /etc/mysql/my.cnf &&\
+    echo "#!/usr/bin/env bash\nif [ ! \$(find db/ -type f ) ]; then\n\tmysql_install_db\nfi\nmysqld" > /root/mysql.sh &&\
+    mkdir /var/run/mysqld &&\
+    chmod +x /root/mysql.sh
 
 # Installing supervisor
 RUN apt-get install -y supervisor &&\
-    echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=nginx -g \"daemon off;\"\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:mysql]\ncommand=mysqld\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:php-fpm]\ncommand=php-fpm --nodaemonize --fpm-config /opt/php/etc/php-fpm.conf\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true" > /etc/supervisor/supervisord.conf
+    echo "[supervisord]\nnodaemon=true\nlogfile=/var/log/supervisord.log\npidfile=/var/run/supervisord.pid\n\n[program:nginx]\ncommand=nginx -g \"daemon off;\"\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:mysql]\ncommand=/root/mysql.sh\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:php-fpm]\ncommand=php-fpm --nodaemonize --fpm-config /opt/php/etc/php-fpm.conf\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true" > /etc/supervisor/supervisord.conf
 
 EXPOSE 80
 CMD /usr/bin/supervisord
