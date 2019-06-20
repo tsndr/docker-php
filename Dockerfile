@@ -20,9 +20,9 @@ RUN cd /usr/local/src/ &&\
         --with-libiconv-prefix=/usr/local/libiconv/ &&\
     make &&\
     make install &&\
-    make clean
-RUN ln -s /usr/local/bison/bin/bison /usr/bin/bison
-RUN ln -s /usr/local/bison/bin/yacc /usr/bin/yacc
+    make clean &&\
+    ln -s /usr/local/bison/bin/bison /usr/bin/bison &&\
+    ln -s /usr/local/bison/bin/yacc /usr/bin/yacc
 
 # Building php cli
 RUN cd /usr/local/src &&\
@@ -128,8 +128,9 @@ RUN apt-get install -y nginx &&\
 RUN export DEBIAN_FRONTEND=noninteractive &&\
     apt-get install -y mysql-server
 
+# Installing supervisor
 RUN apt-get install -y supervisor &&\
     echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=nginx -g \"daemon off;\"\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:mysql]\ncommand=mysqld\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:php-fpm]\ncommand=php-fpm --nodaemonize --fpm-config /opt/php/etc/php-fpm.conf\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true" > /etc/supervisor/supervisord.conf
 
-EXPOSE 80 3306
+EXPOSE 80
 CMD /usr/bin/supervisord
