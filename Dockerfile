@@ -125,7 +125,9 @@ RUN cd /usr/local/src/php &&\
 
 # Installing nginx
 RUN apt-get install -y nginx &&\
-    echo "server {\n\tlisten 80;\n\tlisten [::]:80;\n\tserver_name _;\n\taccess_log off;\n\terror_log off;\n\troot /var/www;\n\tindex index.php index.html;\n\tclient_max_body_size 30M;\n\tlocation ~* \.php\$ {\n\t\ttry_files\t\t\$uri /index.php;\n\t\tfastcgi_index\tindex.php;\n\t\tfastcgi_pass\tunix:/var/run/php-fpm.sock;\n\t\tinclude\t\t\tfastcgi_params;\n\t\tfastcgi_param\tSCRIPT_FILENAME\t\t\$document_root\$fastcgi_script_name;\n\t\tfastcgi_param\tSCRIPT_NAME\t\t\t\$fastcgi_script_name;\n\t\tfastcgi_read_timeout 600;\n\t}\n\tlocation / {\n\t\ttry_files \$uri \$uri/ =404;\n\t\tallow all;\n\t}\n\tlocation ~ /.well-known {\n\t\tallow all;\n\t}\n\tlocation ~ /\.ht {\n\t\tdeny all;\n\t\treturn 404;\n\t}\n}" > /etc/nginx/sites-available/default
+    echo "server {\n\tlisten 80;\n\tlisten [::]:80;\n\tserver_name _;\n\taccess_log off;\n\terror_log off;\n\troot /var/www;\n\tindex index.php index.html;\n\tclient_max_body_size 30M;\n\tlocation ~* \.php\$ {\n\t\ttry_files\t\t\$uri /index.php;\n\t\tfastcgi_index\tindex.php;\n\t\tfastcgi_pass\tunix:/var/run/php-fpm.sock;\n\t\tinclude\t\t\tfastcgi_params;\n\t\tfastcgi_param\tSCRIPT_FILENAME\t\t\$document_root\$fastcgi_script_name;\n\t\tfastcgi_param\tSCRIPT_NAME\t\t\t\$fastcgi_script_name;\n\t\tfastcgi_read_timeout 600;\n\t}\n\tlocation / {\n\t\ttry_files \$uri \$uri/ =404;\n\t\tallow all;\n\t}\n\tlocation ~ /.well-known {\n\t\tallow all;\n\t}\n\tlocation ~ /\.ht {\n\t\tdeny all;\n\t\treturn 404;\n\t}\n}" > /etc/nginx/sites-available/default &&\
+    echo "#!/usr/bin/env bash\nchown -R www-data:www-data /var/www\nnginx -g \"daemon off;\"" > /root/nginx.sh &&\
+    chmod +x /root/nginx.sh
 
 # Installing mysql server
 RUN export DEBIAN_FRONTEND=noninteractive &&\
@@ -137,7 +139,7 @@ RUN export DEBIAN_FRONTEND=noninteractive &&\
 
 # Installing supervisor
 RUN apt-get install -y supervisor &&\
-    echo "[supervisord]\nnodaemon=true\nlogfile=/var/log/supervisord.log\npidfile=/var/run/supervisord.pid\n\n[program:nginx]\ncommand=nginx -g \"daemon off;\"\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:mysql]\ncommand=/root/mysql.sh\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:php-fpm]\ncommand=php-fpm --nodaemonize --fpm-config /opt/php/etc/php-fpm.conf\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true" > /etc/supervisor/supervisord.conf
+    echo "[supervisord]\nnodaemon=true\nlogfile=/var/log/supervisord.log\npidfile=/var/run/supervisord.pid\n\n[program:nginx]\ncommand=/root/nginx.sh\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:mysql]\ncommand=/root/mysql.sh\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:php-fpm]\ncommand=php-fpm --nodaemonize --fpm-config /opt/php/etc/php-fpm.conf\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true" > /etc/supervisor/supervisord.conf
 
 EXPOSE 80
 CMD /usr/bin/supervisord
