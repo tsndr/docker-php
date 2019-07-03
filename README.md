@@ -6,14 +6,6 @@ docker run \
     -d \
     -p 80:80 \
     -v "$(pwd)"/html:/var/www \
+    -v "$(pwd)"/db:/var/lib/mysql \
     tsndr/php:7.3
-```
-
-Init DB
-`mysql_install_db` to init database if mounted in volume
-
-Add to `/etc/mysql/my.cnf`:
-```
-[mysqld]
-user=root
 ```
