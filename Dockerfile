@@ -143,5 +143,5 @@ RUN export DEBIAN_FRONTEND=noninteractive &&\
 RUN apt-get install -y supervisor &&\
     echo "[supervisord]\nnodaemon=true\nlogfile=/var/log/supervisord.log\npidfile=/var/run/supervisord.pid\n\n[program:nginx]\ncommand=/root/nginx.sh\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:mysql]\ncommand=/root/mysql.sh\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true\n\n[program:php-fpm]\ncommand=php-fpm --nodaemonize --fpm-config /opt/php/etc/php-fpm.conf\nkillasgroup=true\nstopasgroup=true\nredirect_stderr=true" > /etc/supervisor/supervisord.conf
 
-EXPOSE 80
+EXPOSE 80 3306
 CMD /usr/bin/supervisord
