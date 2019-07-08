@@ -24,6 +24,7 @@ RUN cd /usr/local/src/ &&\
     make &&\
     make install &&\
     make clean &&\
+    rm -rf /usr/local/src/bison-2.7 &&\
     ln -s /usr/local/bison/bin/bison /usr/bin/bison &&\
     ln -s /usr/local/bison/bin/yacc /usr/bin/yacc
 
@@ -121,7 +122,8 @@ RUN cd /usr/local/src/php &&\
     cp /usr/local/src/php/php.ini-production /opt/php/lib/php.ini &&\
     sed -i 's/; Local Variables:/; Local Variables:\ndate.timezone=Europe\/Berlin\nmemory_limit=256M\nupload_max_filesize=100M\npost_max_size=101M\n/' /opt/php/lib/php.ini &&\
     cp /opt/php/etc/php-fpm.conf.default /opt/php/etc/php-fpm.conf &&\
-    echo "[www]\nuser = www-data\ngroup = www-data\nlisten = /var/run/php-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\npm = ondemand\npm.max_children = 50\npm.process_idle_timeout = 10s\npm.max_requests = 500" > /opt/php/etc/php-fpm.d/www.conf
+    echo "[www]\nuser = www-data\ngroup = www-data\nlisten = /var/run/php-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\npm = ondemand\npm.max_children = 50\npm.process_idle_timeout = 10s\npm.max_requests = 500" > /opt/php/etc/php-fpm.d/www.conf &&\
+    rm -rf /usr/local/src/php
 
 # Installing nginx
 RUN apt-get install -y nginx &&\
@@ -132,7 +134,7 @@ RUN apt-get install -y nginx &&\
 # Installing mysql server
 RUN export DEBIAN_FRONTEND=noninteractive &&\
     apt-get install -y mysql-server &&\
-    sed -i "s/\[client-server\]/\[mysqld\]\nuser=root\n\n[client-server]/g" /etc/mysql/my.cnf &&\
+    sed -i "s/\[client-server\]/\[mysqld\]\nbind-address=0.0.0.0\nuser=root\n\n[client-server]/g" /etc/mysql/my.cnf &&\
     echo "#!/usr/bin/env bash\nif [ ! \$(find db/ -type f ) ]; then\n\tmysql_install_db\nfi\nmysqld" > /root/mysql.sh &&\
     mkdir /var/run/mysqld &&\
     chmod +x /root/mysql.sh
