@@ -134,8 +134,9 @@ RUN apt-get install -y nginx &&\
 # Installing mysql server
 RUN export DEBIAN_FRONTEND=noninteractive &&\
     apt-get install -y mysql-server &&\
-    sed -i "s/\[client-server\]/\[mysqld\]\nbind-address=0.0.0.0\nuser=root\n\n[client-server]/g" /etc/mysql/my.cnf &&\
-    echo "#!/usr/bin/env bash\nif [ ! \$(find db/ -type f ) ]; then\n\tmysql_install_db\nfi\nmysqld" > /root/mysql.sh &&\
+    sed -i "s/\[client-server\]/\[mysqld\]\nuser=root\n\n[client-server]/g" /etc/mysql/my.cnf &&\
+    echo "[mysqld]\nbind-address=0.0.0.0" >> /etc/mysql/my.cnf &&\
+    echo "#!/usr/bin/env bash\nif [ ! \$(find db/ -type f ) ]; then\n\tmysql_install_db\n\n\tmysqld &> /dev/null &\n\tMYSQL_PID=\$!\n\n\techo \"exit\" | mysql &> /dev/null\n\n\twhile [ \"\$?\" != 0 ]; do\n\t\tsleep 5\n\t\techo \"exit\" | mysql &> /dev/null\n\tdone\n\n\techo \"grant all privileges on *.* to 'root'@'%' identified by 'root';use mysql;update user set Password = '', Grant_priv = 'Y' where User = 'root' and Host = '%';flush privileges;\" | mysql\n\n\tkill \$MYSQL_PID\nfi\nmysqld" > /root/mysql.sh &&\
     mkdir /var/run/mysqld &&\
     chmod +x /root/mysql.sh
 
