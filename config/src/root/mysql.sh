@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-if [ ! $(find db/ -type f ) ]; then
+if [ ! $(find /var/lib/mysql/ -type f ) ]; then
     mysql_install_db
 
     mysqld &> /dev/null &
